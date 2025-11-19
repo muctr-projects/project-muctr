@@ -20,6 +20,16 @@ void GnuplotVisualizer::save_data_to_file(const std::vector<double>& x,
 void GnuplotVisualizer::plot_speedup(const std::vector<int>& threads, 
                                    const std::vector<double>& speedups,
                                    const std::string& filename) {
+    // Проверка на пустые векторы
+    if (threads.empty() || speedups.empty()) {
+        throw std::invalid_argument("Векторы threads и speedups не могут быть пустыми");
+    }
+    
+    // Проверка на совпадение размеров
+    if (threads.size() != speedups.size()) {
+        throw std::invalid_argument("Размеры векторов threads и speedups должны совпадать");
+    }
+    
     std::ofstream data_file("speedup_data.txt");
     for (size_t i = 0; i < threads.size(); i++) {
         data_file << threads[i] << " " << speedups[i] << "\n";
