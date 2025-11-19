@@ -41,3 +41,6 @@ Thumbs.db
 *.log
 *.png
 
+*.gp
+*.0
+speedup_data.txt

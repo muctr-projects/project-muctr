@@ -20,6 +20,16 @@ void GnuplotVisualizer::save_data_to_file(const std::vector<double>& x,
 void GnuplotVisualizer::plot_speedup(const std::vector<int>& threads, 
                                    const std::vector<double>& speedups,
                                    const std::string& filename) {
+    // Проверка на пустые векторы
+    if (threads.empty() || speedups.empty()) {
+        throw std::invalid_argument("Векторы threads и speedups не могут быть пустыми");
+    }
+    
+    // Проверка на совпадение размеров
+    if (threads.size() != speedups.size()) {
+        throw std::invalid_argument("Размеры векторов threads и speedups должны совпадать");
+    }
+    
     std::ofstream data_file("speedup_data.txt");
     for (size_t i = 0; i < threads.size(); i++) {
         data_file << threads[i] << " " << speedups[i] << "\n";
@@ -27,6 +37,11 @@ void GnuplotVisualizer::plot_speedup(const std::vector<int>& threads,
     data_file.close();
     
     std::ofstream script("plot_speedup.gp");
+    if (!script.is_open()) {
+        remove("speedup_data.txt");
+        throw std::runtime_error("Не удалось создать файл скрипта gnuplot");
+    }
+    
     script << "set terminal pngcairo size 1200,800 enhanced font 'Arial,12'\n";
     script << "set output '" << filename << "'\n";
     script << "set title 'Зависимость ускорения многопоточной программы по сравнению с 1 потоком'\n";
@@ -40,7 +55,18 @@ void GnuplotVisualizer::plot_speedup(const std::vector<int>& threads,
     script << "     x with lines lw 2 lc rgb 'blue' title 'Линейное ускорение'\n";
     script.close();
     
-    system("gnuplot plot_speedup.gp");
+    // Выполняем gnuplot и проверяем результат
+    // Перенаправляем stderr для подавления сообщений об ошибках
+#ifdef _WIN32
+    int result = system("gnuplot plot_speedup.gp 2>nul");
+#else
+    int result = system("gnuplot plot_speedup.gp 2>/dev/null");
+#endif
+    if (result != 0) {
+        remove("speedup_data.txt");
+        remove("plot_speedup.gp");
+        throw std::runtime_error("Ошибка при выполнении gnuplot. Убедитесь, что gnuplot установлен в системе.");
+    }
     
     remove("speedup_data.txt");
     remove("plot_speedup.gp");
