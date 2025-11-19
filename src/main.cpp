@@ -5,7 +5,6 @@
 #include <omp.h>
 #include "core/newton_interpolator.h"
 #include "core/gnuplot_visualizer.h"
-#include <windows.h>
 
 /**
  * @brief Тестовые функции для интерполяции
