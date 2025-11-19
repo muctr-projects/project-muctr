@@ -101,14 +101,17 @@ int main() {
             }
             
             std::string speedup_plot = "speedup_" + test_name + ".png";
-            GnuplotVisualizer::plot_speedup(thread_counts, speedups, speedup_plot);
-            std::cout << "График сохранен: " << speedup_plot << std::endl;
+            try {
+                GnuplotVisualizer::plot_speedup(thread_counts, speedups, speedup_plot);
+                std::cout << "График сохранен: " << speedup_plot << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "Предупреждение: не удалось создать график " << speedup_plot 
+                          << ": " << e.what() << std::endl;
+                std::cerr << "Продолжаем выполнение без графика..." << std::endl;
+            }
         }
         
-        std::cout << "\nВсе графики ускорения созданы:" << std::endl;
-        for (const auto& test_func : test_functions) {
-            std::cout << "speedup_" << test_func.first << ".png" << std::endl;
-        }
+        std::cout << "\nТестирование завершено." << std::endl;
         
     } catch (const std::exception& e) {
         std::cerr << "Ошибка: " << e.what() << std::endl;
