@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <cmath>
 #include <iostream>
-#include <algorithm>
 
 NewtonInterpolator::NewtonInterpolator() {}
 
@@ -19,23 +18,8 @@ void NewtonInterpolator::set_data(const std::vector<double>& x, const std::vecto
         throw std::invalid_argument("Необходимо как минимум 2 точки для интерполяции");
     }
     
-    std::vector<size_t> indices(x.size());
-    for (size_t i = 0; i < indices.size(); i++) {
-        indices[i] = i;
-    }
-    
-    std::sort(indices.begin(), indices.end(), [&](size_t i, size_t j) {
-        return x[i] < x[j];
-    });
-    
-    x_values.resize(x.size());
-    y_values.resize(y.size());
-    
-    for (size_t i = 0; i < indices.size(); i++) {
-        x_values[i] = x[indices[i]];
-        y_values[i] = y[indices[i]];
-    }
-    
+    x_values = x;
+    y_values = y;
     compute_divided_differences();
 }
 
@@ -44,15 +28,20 @@ void NewtonInterpolator::compute_divided_differences() {
     divided_differences.clear();
     divided_differences.resize(n, std::vector<double>(n, 0.0));
 
+    #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         divided_differences[i][0] = y_values[i];
     }
 
     for (int j = 1; j < n; j++) {
+        #pragma omp parallel for
         for (int i = 0; i < n - j; i++) {
             double denominator = x_values[i+j] - x_values[i];
             if (std::abs(denominator) < 1e-10) {
-                throw std::runtime_error("Деление на ноль при вычислении разделенных разностей");
+                #pragma omp critical
+                {
+                    throw std::runtime_error("Деление на ноль при вычислении разделенных разностей");
+                }
             }
             divided_differences[i][j] = (divided_differences[i+1][j-1] - divided_differences[i][j-1]) / denominator;
         }
@@ -81,11 +70,7 @@ std::vector<double> NewtonInterpolator::interpolate_multiple(const std::vector<d
 
     #pragma omp parallel for schedule(dynamic, 100)
     for (int i = 0; i < num_points; i++) {
-        try {
-            results[i] = interpolate(points[i]);
-        } catch (const std::exception& e) {
-            results[i] = std::numeric_limits<double>::quiet_NaN();
-        }
+        results[i] = interpolate(points[i]);
     }
     
     return results;
