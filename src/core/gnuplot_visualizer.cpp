@@ -20,12 +20,10 @@ void GnuplotVisualizer::save_data_to_file(const std::vector<double>& x,
 void GnuplotVisualizer::plot_speedup(const std::vector<int>& threads, 
                                    const std::vector<double>& speedups,
                                    const std::string& filename) {
-    // Проверка на пустые векторы
     if (threads.empty() || speedups.empty()) {
         throw std::invalid_argument("Векторы threads и speedups не могут быть пустыми");
     }
     
-    // Проверка на совпадение размеров
     if (threads.size() != speedups.size()) {
         throw std::invalid_argument("Размеры векторов threads и speedups должны совпадать");
     }
@@ -55,8 +53,6 @@ void GnuplotVisualizer::plot_speedup(const std::vector<int>& threads,
     script << "     x with lines lw 2 lc rgb 'blue' title 'Линейное ускорение'\n";
     script.close();
     
-    // Выполняем gnuplot и проверяем результат
-    // Перенаправляем stderr для подавления сообщений об ошибках
 #ifdef _WIN32
     int result = system("gnuplot plot_speedup.gp 2>nul");
 #else
